@@ -24,8 +24,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.6(react@19.2.6)
       slack-hono:
-        specifier: file:../slack-hono
-        version: file:../slack-hono(hono@4.12.18)
+        specifier: ^0.1.0-alpha.0
+        version: 0.1.0-alpha.0(hono@4.12.18)
       slack-web-api-client:
         specifier: ^1.1.11
         version: 1.1.12
@@ -1889,8 +1889,8 @@ packages:
   slack-edge@1.3.16:
     resolution: {integrity: sha512-pccU38qUAW8R03ZsGyqKx5eqU6quSkm8M4Xe7/m8uamfHVAOOe9AorOlKH8AB4JwJSxxvWn5y1F+RxoZrRP8CA==}
 
-  slack-hono@file:../slack-hono:
-    resolution: {directory: ../slack-hono, type: directory}
+  slack-hono@0.1.0-alpha.0:
+    resolution: {integrity: sha512-hSxN3M2nTQmFjrjeztH7qKR5be5ybvZGn+M3uyl4EI6UlcDm2/FeySeNEvkOedRku8oPMVJjb11me3YwHDFvgA==}
     engines: {node: '>=20'}
     peerDependencies:
       hono: '>=4.0.0'
@@ -4074,7 +4074,7 @@ snapshots:
     dependencies:
       slack-web-api-client: 1.1.12
 
-  slack-hono@file:../slack-hono(hono@4.12.18):
+  slack-hono@0.1.0-alpha.0(hono@4.12.18):
     dependencies:
       hono: 4.12.18
       slack-edge: 1.3.16
