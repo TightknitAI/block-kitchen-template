@@ -28,14 +28,14 @@
     "slack-web-api-client": "^1.1.11"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.30.1",
-    "@cloudflare/workers-types": "^4.20250313.0",
+    "@cloudflare/vite-plugin": "^1.37.1",
+    "@cloudflare/workers-types": "^4.20260515.1",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^6.0.3",
     "vite": "^8.0.2",
-    "wrangler": "^4.0.0"
+    "wrangler": "^4.92.0"
   },
   "packageManager": "pnpm@10.32.1"
 }
