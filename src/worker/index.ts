@@ -17,12 +17,26 @@ type Bindings = {
   SLACK_INSTALLATIONS: KVNamespace;
   SLACK_USER_INSTALLATIONS: KVNamespace;
   SLACK_OAUTH_STATE: KVNamespace;
+  SLACK_MODAL_VIEWS: KVNamespace;
   SLACK_SIGNING_SECRET: string;
   SLACK_CLIENT_ID: string;
   SLACK_CLIENT_SECRET: string;
   SLACK_BOT_SCOPES: string;
   SLACK_USER_SCOPES: string;
 };
+
+// Stored modal view — what `/api/slack/modals/send` writes, what the
+// open_modal block-action reads to feed `views.open`.
+interface StoredModalView {
+  team_id: string;
+  user_id: string;
+  blocks: unknown[];
+  title: string;
+  created_at: number;
+}
+const MODAL_VIEW_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
+const MODAL_OPEN_ACTION_ID = "bkb_open_modal";
+const MODAL_VIEW_CALLBACK_ID = "bkb_modal_v1";
 
 type AppEnv = { Bindings: Bindings };
 
@@ -32,21 +46,81 @@ const USER_COOKIE = "bkb_user_id";
 const app = new Hono<AppEnv>();
 
 // ---------------------------------------------------------------------------
-// Slack events (mounted via slack-hono). The template doesn't register any
-// listeners by default — add slash commands, events, or actions here as
-// you extend the app.
+// Slack events (mounted via slack-hono).
+//
+// Multi-workspace authorize() resolves the bot token per request out of
+// SLACK_INSTALLATIONS KV using the team.id on the payload. Registered
+// listeners:
+//   - block_actions:   "bkb_open_modal" → views.open with the stored view
+//   - view_submission: "bkb_modal_v1"   → ack + DM a confirmation
 // ---------------------------------------------------------------------------
 
 app.all("/slack/events", async (c) => {
   const slack = new SlackHonoApp({
-    env: {
-      SLACK_SIGNING_SECRET: c.env.SLACK_SIGNING_SECRET,
-      // Use the first installed workspace's bot token for any listeners
-      // that need to reply. Listeners that handle multi-workspace traffic
-      // should swap in a dynamic authorize() instead.
-      SLACK_BOT_TOKEN: "",
+    env: { SLACK_SIGNING_SECRET: c.env.SLACK_SIGNING_SECRET, SLACK_BOT_TOKEN: "" },
+    authorize: async (req) => {
+      const teamId = (req.body.team as { id?: string } | undefined)?.id
+        ?? (req.body.team_id as string | undefined);
+      if (!teamId) throw new Error("authorize: missing team id on payload");
+      const raw = await c.env.SLACK_INSTALLATIONS.get(teamId);
+      if (!raw) throw new Error(`authorize: no installation for team ${teamId}`);
+      const install = JSON.parse(raw) as StoredBotInstallation;
+      return {
+        botToken: install.bot_token,
+        botId: install.bot_user_id ?? "",
+        botUserId: install.bot_user_id ?? "",
+        botScopes: c.env.SLACK_BOT_SCOPES.split(","),
+        teamId: install.team_id,
+      };
     },
   });
+
+  // Button on the DM nudge: pull the stored view by id and open the modal.
+  slack.action(
+    MODAL_OPEN_ACTION_ID,
+    async () => {},
+    async ({ context, payload }) => {
+      const action = payload.actions[0];
+      const viewId = action && "value" in action ? (action.value as string | undefined) : undefined;
+      if (!viewId) return;
+      const raw = await c.env.SLACK_MODAL_VIEWS.get(viewId);
+      if (!raw) {
+        await context.client.chat.postMessage({
+          channel: payload.user.id,
+          text: "This modal preview has expired. Compose a new one in the builder and try again.",
+        });
+        return;
+      }
+      const stored = JSON.parse(raw) as StoredModalView;
+      await context.client.views.open({
+        trigger_id: payload.trigger_id,
+        view: {
+          type: "modal",
+          callback_id: MODAL_VIEW_CALLBACK_ID,
+          title: { type: "plain_text", text: stored.title.slice(0, 24) },
+          submit: { type: "plain_text", text: "Submit" },
+          close: { type: "plain_text", text: "Cancel" },
+          blocks: stored.blocks as never,
+        },
+      });
+    },
+  );
+
+  // Submission: ack with an empty response (closes the modal) and DM the
+  // submitter so they can see their values landed.
+  slack.viewSubmission(
+    MODAL_VIEW_CALLBACK_ID,
+    async () => ({ response_action: "clear" }),
+    async ({ context, payload }) => {
+      const values = payload.view.state?.values ?? {};
+      const summary = JSON.stringify(values, null, 2).slice(0, 2500);
+      await context.client.chat.postMessage({
+        channel: payload.user.id,
+        text: `Modal submitted. Captured state:\n\`\`\`\n${summary}\n\`\`\``,
+      });
+    },
+  );
+
   return await slack.run(c.req.raw, c.executionCtx);
 });
 
@@ -260,6 +334,76 @@ app.post("/api/slack/messages/send", async (c) => {
       channel: body.channelId,
       blocks: body.blocks as never,
       text: "(Block Kit message — your client must support blocks to render this)",
+    });
+    return c.json({ ok: true });
+  } catch (err) {
+    return c.json({ ok: false, error: err instanceof Error ? err.message : String(err) }, 502);
+  }
+});
+
+interface SendModalBody {
+  blocks: unknown[];
+  title?: string;
+}
+
+// Builder doesn't "send" modals — Slack only opens views in response to an
+// interaction. So this endpoint stores the composed view in KV and DMs the
+// installer a one-button nudge; clicking that button opens the modal with
+// a fresh trigger_id (handled by the bkb_open_modal action above).
+app.post("/api/slack/modals/send", async (c) => {
+  const install = await requireBotInstall(c);
+  if (install instanceof Response) return install;
+
+  const userId = getCookie(c, USER_COOKIE);
+  if (!userId) {
+    return c.json({ ok: false, error: "Not signed in — reinstall the app via /slack/install" }, 401);
+  }
+
+  const body = (await c.req.json()) as Partial<SendModalBody>;
+  if (!Array.isArray(body.blocks)) {
+    return c.json({ ok: false, error: "blocks are required" }, 400);
+  }
+
+  const validation = validateBlockKit(body.blocks, { surface: "modal" });
+  if (!validation.valid) {
+    return c.json({ ok: false, error: `Invalid blocks: ${validation.errors.join("; ")}` }, 400);
+  }
+
+  const viewId = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+  const stored: StoredModalView = {
+    team_id: install.team_id,
+    user_id: userId,
+    blocks: body.blocks,
+    title: (body.title ?? "Modal preview").trim() || "Modal preview",
+    created_at: Date.now(),
+  };
+  await c.env.SLACK_MODAL_VIEWS.put(viewId, JSON.stringify(stored), {
+    expirationTtl: MODAL_VIEW_TTL_SECONDS,
+  });
+
+  const client = new SlackAPIClient(install.bot_token);
+  try {
+    await client.chat.postMessage({
+      channel: userId,
+      text: "Your modal is ready — click Open to preview it.",
+      blocks: [
+        {
+          type: "section",
+          text: { type: "mrkdwn", text: "*Your modal is ready.* Click *Open modal* to preview it in Slack." },
+        },
+        {
+          type: "actions",
+          elements: [
+            {
+              type: "button",
+              text: { type: "plain_text", text: "Open modal" },
+              style: "primary",
+              action_id: MODAL_OPEN_ACTION_ID,
+              value: viewId,
+            },
+          ],
+        },
+      ],
     });
     return c.json({ ok: true });
   } catch (err) {

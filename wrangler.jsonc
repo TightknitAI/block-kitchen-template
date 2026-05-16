@@ -18,6 +18,10 @@
     {
       "binding": "SLACK_OAUTH_STATE",
       "id": "REPLACE_WITH_OAUTH_STATE_KV_ID"
+    },
+    {
+      "binding": "SLACK_MODAL_VIEWS",
+      "id": "REPLACE_WITH_MODAL_VIEWS_KV_ID"
     }
   ],
 

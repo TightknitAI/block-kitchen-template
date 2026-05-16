@@ -18,7 +18,8 @@
       "bot": [
         "chat:write",
         "channels:read",
-        "groups:read"
+        "groups:read",
+        "im:write"
       ],
       "user": [
         "chat:write",
@@ -27,6 +28,10 @@
     }
   },
   "settings": {
+    "interactivity": {
+      "is_enabled": true,
+      "request_url": "https://YOUR_WORKER_URL/slack/events"
+    },
     "org_deploy_enabled": false,
     "socket_mode_enabled": false,
     "token_rotation_enabled": false

@@ -11,7 +11,7 @@
     "deploy": "wrangler deploy",
     "logs": "wrangler tail",
     "typecheck": "tsc --noEmit",
-    "setup:kv": "wrangler kv namespace create SLACK_INSTALLATIONS && wrangler kv namespace create SLACK_USER_INSTALLATIONS && wrangler kv namespace create SLACK_OAUTH_STATE",
+    "setup:kv": "wrangler kv namespace create SLACK_INSTALLATIONS && wrangler kv namespace create SLACK_USER_INSTALLATIONS && wrangler kv namespace create SLACK_OAUTH_STATE && wrangler kv namespace create SLACK_MODAL_VIEWS",
     "setup:manifest": "bash scripts/setup-manifest.sh",
     "manifest:copy": "bash scripts/copy-manifest.sh",
     "setup:tunnel": "bash scripts/setup-tunnel.sh",
