@@ -86,6 +86,8 @@ Opens `/slack/install` on your tunnel. After OAuth completes, the app sets a wor
 
 Drag a header + section block into the canvas, click **Send**, pick a channel, hit confirm — your first Block Kit message lands in Slack.
 
+> Stuck? Run `pnpm run setup:doctor` for a preflight that audits KV ids, `.dev.vars`, manifest URL substitution, interactivity, and bot scopes, and prints a punch list of what still needs doing.
+
 ## "Send as me" (user-token OAuth)
 
 The builder's send dialog has a **Send as me** toggle. The first time you flip it on, the SPA detects you don't have a user token yet and shows a *Sign in with Slack* link — that takes you through a second OAuth round-trip (`/slack/user-install`) that issues a user token with `chat:write,im:write` scopes. After that round-trip, future sends with the toggle on are posted as you instead of the bot.
