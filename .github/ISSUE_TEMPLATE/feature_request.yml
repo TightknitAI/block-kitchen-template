@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest an addition or change to the template.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This repo is a **template** — it stays opinionated and small. Features that belong in a fork are usually a better fit there. We're most interested in changes that improve the default experience for everyone starting from this template.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the use case, not the solution. What were you trying to do when you hit the gap?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Sketch of the API, UI, or behavior you have in mind. Code snippets welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Anything you tried or considered before filing this — including doing it in your own fork.

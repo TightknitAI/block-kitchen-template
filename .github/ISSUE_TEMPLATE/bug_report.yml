@@ -1,0 +1,62 @@
+name: Bug report
+description: Something in the template is broken or behaves unexpectedly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Please **do not** report security issues here — see [SECURITY.md](../SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what did you see instead?
+      placeholder: |
+        1. Ran `pnpm run dev:tunnel`
+        2. Hit `/slack/install`
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or version
+      description: Output of `git rev-parse --short HEAD`, or the release tag you forked from.
+      placeholder: e.g. 2c6b6b7
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the template is involved?
+      options:
+        - Builder UI / React SPA
+        - Bot OAuth (`/slack/install`)
+        - User-token OAuth (`/slack/user-install`)
+        - Worker API routes (`/api/slack/*`)
+        - Slack events ingress (`/slack/events`)
+        - Setup scripts (`scripts/`)
+        - Deploy / CI
+        - Docs
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Node version, pnpm version, OS, and whether you're hitting it locally or on a deployed Worker.
+      placeholder: |
+        - Node: 20.18.0
+        - pnpm: 10.32.1
+        - OS: macOS 15.1
+        - Where: local `pnpm dev:tunnel` / deployed Worker
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant `wrangler tail` output, browser console errors, or stack traces. Scrub tokens and signing secrets before pasting.
+      render: shell

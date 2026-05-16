@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/TightknitAI/block-kit-builder-template/security/advisories/new
+    about: Report security issues privately — see SECURITY.md. Do not open a public issue.
+  - name: block-kit-builder package issues
+    url: https://github.com/TightknitAI/block-kit-builder/issues
+    about: For bugs in the React component itself (drag-and-drop, block editing, preview), file there.
+  - name: slack-hono issues
+    url: https://github.com/TightknitAI/slack-hono/issues
+    about: For bugs in the Slack ingress / OAuth helpers, file there.
