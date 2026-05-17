@@ -8,9 +8,9 @@ importers:
 
   .:
     dependencies:
-      '@tightknitai/block-kit-builder':
-        specifier: 0.1.0-alpha.0
-        version: 0.1.0-alpha.0(@floating-ui/dom@1.7.6)(@tiptap/core@3.23.4(@tiptap/pm@3.23.4))(@tiptap/pm@3.23.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(slack-web-api-client@1.1.12)
+      '@tightknitai/block-kitchen':
+        specifier: 0.6.1-alpha.0
+        version: 0.6.1-alpha.0(@floating-ui/dom@1.7.6)(@tiptap/core@3.23.4(@tiptap/pm@3.23.4))(@tiptap/pm@3.23.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@tightknitai/slack-block-kit-validator':
         specifier: 0.1.0-alpha.0
         version: 0.1.0-alpha.0
@@ -954,13 +954,12 @@ packages:
   '@speed-highlight/core@1.2.15':
     resolution: {integrity: sha512-BMq1K3DsElxDWawkX6eLg9+CKJrTVGCBAWVuHXVUV2u0s2711qiChLSId6ikYPfxhdYocLNt3wWwSvDiTvFabw==}
 
-  '@tightknitai/block-kit-builder@0.1.0-alpha.0':
-    resolution: {integrity: sha512-Yq8dp/bGgLF3AMh8UAehO0QNYVTlV8NvQS1HgIUQgtO/MbEoWKlcWh1vKwxIw+D/NLTdS547TUcL+Yq3rl2frQ==}
-    engines: {node: '>=20'}
+  '@tightknitai/block-kitchen@0.6.1-alpha.0':
+    resolution: {integrity: sha512-ECD/3dpqEjYgHyyUjdEeo/w0ZEXljTj/lWLpmCVqyYgXpD+c07+okRwqWslmfm4YMQDMGfby/QAjLB//e2zQXw==}
+    engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
-      slack-web-api-client: ^1.1.9
 
   '@tightknitai/slack-block-kit-validator@0.1.0-alpha.0':
     resolution: {integrity: sha512-mmZmH99dYSy4LNhm9WYhyq+DvEd2AXiAMNmh/E9c7QGo3D+IckVkjxYuMQ8k27JROkNKFYBNamJMKQtJ6u3gRg==}
@@ -1420,8 +1419,8 @@ packages:
   longest-streak@3.1.0:
     resolution: {integrity: sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g==}
 
-  lucide-react@0.563.0:
-    resolution: {integrity: sha512-8dXPB2GI4dI8jV4MgUDGBeLdGk8ekfqVZ0BdLcrRzocGgG75ltNEmWS+gE7uokKF/0oSUuczNDT+g9hFJ23FkA==}
+  lucide-react@1.16.0:
+    resolution: {integrity: sha512-dYwyPzb4MEKpGUmNYk3WKWPnMrHs3FKM+q94kAnJrcDIqqn1hq2xY8scaS2ovsOCM5D51ey2gaRG3PBb1vgoYQ==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -1764,8 +1763,8 @@ packages:
     resolution: {integrity: sha512-SS+jx45GF1QjgEXQx4NJZV9ImqmO2NPz5FNsIHrsDjh2YsHnawpan7SNQ1o8NuhrbHZy9AZhIoCUiCeaW/C80g==}
     engines: {node: '>=18'}
 
-  tailwind-merge@2.6.1:
-    resolution: {integrity: sha512-Oo6tHdpZsGpkKG88HJ8RR1rg/RdnEkQEfMoEk2x1XRI3F1AxeU+ijRXpiVUF4UbLfcxxRGw6TbUINKYdWVsQTQ==}
+  tailwind-merge@3.6.0:
+    resolution: {integrity: sha512-uxL7qAVQriqRQPAyK3pj66VqskWqoZ37PW94jwOTwNfq/z9oyu1V+eqrZqtR2+fCiXdYOZe/Modt8GtvqNzu+w==}
 
   tinyglobby@0.2.16:
     resolution: {integrity: sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==}
@@ -2612,7 +2611,7 @@ snapshots:
 
   '@speed-highlight/core@1.2.15': {}
 
-  '@tightknitai/block-kit-builder@0.1.0-alpha.0(@floating-ui/dom@1.7.6)(@tiptap/core@3.23.4(@tiptap/pm@3.23.4))(@tiptap/pm@3.23.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(slack-web-api-client@1.1.12)':
+  '@tightknitai/block-kitchen@0.6.1-alpha.0(@floating-ui/dom@1.7.6)(@tiptap/core@3.23.4(@tiptap/pm@3.23.4))(@tiptap/pm@3.23.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
     dependencies:
       '@dnd-kit/core': 6.3.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@dnd-kit/sortable': 10.0.0(@dnd-kit/core@6.3.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)
@@ -2629,13 +2628,13 @@ snapshots:
       '@tiptap/starter-kit': 3.23.4
       class-variance-authority: 0.7.1
       clsx: 2.1.1
-      lucide-react: 0.563.0(react@19.2.6)
+      lucide-react: 1.16.0(react@19.2.6)
       nanoid: 5.1.11
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
       slack-blocks-to-jsx: 1.0.4(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       slack-web-api-client: 1.1.12
-      tailwind-merge: 2.6.1
+      tailwind-merge: 3.6.0
     transitivePeerDependencies:
       - '@floating-ui/dom'
       - '@tiptap/core'
@@ -3081,7 +3080,7 @@ snapshots:
 
   longest-streak@3.1.0: {}
 
-  lucide-react@0.563.0(react@19.2.6):
+  lucide-react@1.16.0(react@19.2.6):
     dependencies:
       react: 19.2.6
 
@@ -3744,7 +3743,7 @@ snapshots:
 
   supports-color@10.2.2: {}
 
-  tailwind-merge@2.6.1: {}
+  tailwind-merge@3.6.0: {}
 
   tinyglobby@0.2.16:
     dependencies:
