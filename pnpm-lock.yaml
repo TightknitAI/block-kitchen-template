@@ -14,6 +14,9 @@ importers:
       '@tightknitai/slack-block-kit-validator':
         specifier: 0.1.0-alpha.0
         version: 0.1.0-alpha.0
+      '@tightknitai/slack-hono':
+        specifier: ^0.1.1
+        version: 0.1.1(hono@4.12.18)
       hono:
         specifier: ^4.12.18
         version: 4.12.18
@@ -23,9 +26,6 @@ importers:
       react-dom:
         specifier: ^19.2.6
         version: 19.2.6(react@19.2.6)
-      slack-hono:
-        specifier: 0.1.0-alpha.0
-        version: 0.1.0-alpha.0(hono@4.12.18)
       slack-web-api-client:
         specifier: ^1.1.12
         version: 1.1.12
@@ -965,6 +965,12 @@ packages:
     resolution: {integrity: sha512-mmZmH99dYSy4LNhm9WYhyq+DvEd2AXiAMNmh/E9c7QGo3D+IckVkjxYuMQ8k27JROkNKFYBNamJMKQtJ6u3gRg==}
     engines: {node: '>=20'}
 
+  '@tightknitai/slack-hono@0.1.1':
+    resolution: {integrity: sha512-GGTzQzIA+QAyFUCaDHa2cZLnJzJ2y9mqcU9+3CYdfec31XlAOj75nKFUWX8IU8mb8F72ubZomw6dQOg0MJTIjQ==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      hono: '>=4.0.0'
+
   '@tiptap/core@3.23.4':
     resolution: {integrity: sha512-ni2LWE52bVeSt3L2HVBSmbBw+elc32ATej9C68EyKzN/8vR5ILxFn6RCdDTKm4asmwZyq2jys12dKmBdWMr9QA==}
     peerDependencies:
@@ -1733,12 +1739,6 @@ packages:
 
   slack-edge@1.3.16:
     resolution: {integrity: sha512-pccU38qUAW8R03ZsGyqKx5eqU6quSkm8M4Xe7/m8uamfHVAOOe9AorOlKH8AB4JwJSxxvWn5y1F+RxoZrRP8CA==}
-
-  slack-hono@0.1.0-alpha.0:
-    resolution: {integrity: sha512-hSxN3M2nTQmFjrjeztH7qKR5be5ybvZGn+M3uyl4EI6UlcDm2/FeySeNEvkOedRku8oPMVJjb11me3YwHDFvgA==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      hono: '>=4.0.0'
 
   slack-web-api-client@1.1.12:
     resolution: {integrity: sha512-ge0B42P38FjozfUp6fhPBYAn0WVgs8wMPI2G2TlgGnm4dJ0bqAeX/vQB/JkUXyO3PdlEaMSfVvJl60YLYvURHA==}
@@ -2647,6 +2647,11 @@ snapshots:
     dependencies:
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
+
+  '@tightknitai/slack-hono@0.1.1(hono@4.12.18)':
+    dependencies:
+      hono: 4.12.18
+      slack-edge: 1.3.16
 
   '@tiptap/core@3.23.4(@tiptap/pm@3.23.4)':
     dependencies:
@@ -3716,11 +3721,6 @@ snapshots:
   slack-edge@1.3.16:
     dependencies:
       slack-web-api-client: 1.1.12
-
-  slack-hono@0.1.0-alpha.0(hono@4.12.18):
-    dependencies:
-      hono: 4.12.18
-      slack-edge: 1.3.16
 
   slack-web-api-client@1.1.12: {}
 

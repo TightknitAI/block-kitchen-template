@@ -2,7 +2,7 @@
   "name": "block-kitchen-template",
   "version": "0.1.0",
   "private": true,
-  "description": "Template app — Slack Block Kitchen UI on Cloudflare Workers, sending messages via slack-hono.",
+  "description": "Template app — Slack Block Kitchen UI on Cloudflare Workers, sending messages via @tightknitai/slack-hono.",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
@@ -25,7 +25,7 @@
     "hono": "^4.12.18",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "slack-hono": "0.1.0-alpha.0",
+    "@tightknitai/slack-hono": "^0.1.1",
     "slack-web-api-client": "^1.1.12"
   },
   "devDependencies": {
