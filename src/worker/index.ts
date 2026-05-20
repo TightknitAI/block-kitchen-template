@@ -1,5 +1,5 @@
 import { Hono, type Context } from "hono";
-import { SlackHonoApp } from "slack-hono";
+import { SlackHonoApp } from "@tightknitai/slack-hono";
 import { SlackAPIClient } from "slack-web-api-client";
 import { validateBlockKit } from "@tightknitai/slack-block-kit-validator";
 import {
