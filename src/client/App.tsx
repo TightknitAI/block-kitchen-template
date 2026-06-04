@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BlockKitchen,
   type BlockKitchenProps,
   type ChannelOption,
+  type CustomEmoji,
   type SendAsUserStatus,
   type SendPayload,
   type SendResult,
@@ -36,6 +37,20 @@ const messageIO: BuilderIO = {
   },
 };
 
+/**
+ * Workspace custom emoji, fetched once from the worker's `emoji.list` proxy.
+ * Unlike channels / send-as-user status (lazy loaders the builder calls on
+ * demand), `customEmojis` is a plain array prop, so we resolve it up front and
+ * hand it in. Non-blocking: any failure (not installed yet, missing
+ * `emoji:read` scope) yields an empty list and the preview falls back to the
+ * library's defaults.
+ */
+async function loadCustomEmojis(): Promise<CustomEmoji[]> {
+  const res = await fetch("/api/slack/emojis", { credentials: "include" });
+  if (!res.ok) return [];
+  return res.json();
+}
+
 const modalIO: BuilderIO = {
   loadChannels: async (): Promise<ChannelOption[]> => [
     { id: "__dm__", name: "Direct message (app Messages tab)" },
@@ -64,6 +79,23 @@ const modalIO: BuilderIO = {
 export function App() {
   const [mode, setMode] = useState<Mode>("message");
   const io = useMemo(() => (mode === "message" ? messageIO : modalIO), [mode]);
+
+  // Custom emoji are workspace-level, so they apply to both modes. Load once on
+  // mount and pass into the builder regardless of surface.
+  const [customEmojis, setCustomEmojis] = useState<CustomEmoji[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    loadCustomEmojis()
+      .then((emojis) => {
+        if (!cancelled) setCustomEmojis(emojis);
+      })
+      .catch(() => {
+        /* non-blocking — preview falls back to the library's defaults */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="app">
@@ -100,7 +132,7 @@ export function App() {
         </div>
       </header>
       <main className="app__main">
-        <BlockKitchen key={mode} workspaceName="Slack" {...io} />
+        <BlockKitchen key={mode} workspaceName="Slack" customEmojis={customEmojis} {...io} />
       </main>
     </div>
   );

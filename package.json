@@ -20,7 +20,7 @@
     "install-app": "bash scripts/install-app.sh"
   },
   "dependencies": {
-    "@tightknitai/block-kitchen": "0.8.3",
+    "@tightknitai/block-kitchen": "0.8.4",
     "@tightknitai/slack-block-kit-validator": "0.1.7",
     "hono": "^4.12.23",
     "react": "^19.2.6",

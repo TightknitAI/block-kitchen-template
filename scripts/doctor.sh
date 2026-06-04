@@ -70,11 +70,16 @@ if grep -q '"im:write"' manifest.json; then
 else
   check "Bot scope im:write present" "no" "manifest is missing im:write — re-pull from this repo"
 fi
+if grep -q '"emoji:read"' manifest.json; then
+  check "Bot scope emoji:read present" "ok"
+else
+  check "Bot scope emoji:read present" "no" "manifest is missing emoji:read — re-pull from this repo (powers /api/slack/emojis)"
+fi
 
 # ── reinstall reminder ────────────────────────────────────────────────
 echo ""
 echo "Slack app"
-warn "Reinstall the app if scopes changed" "this PR adds the bot scope \`im:write\`; rerun \`pnpm run install-app\` after re-pushing the manifest so the new scope is granted"
+warn "Reinstall the app if scopes changed" "custom-emoji support adds the bot scope \`emoji:read\`; rerun \`pnpm run install-app\` after re-pushing the manifest so the new scope is granted"
 
 # ── cloudflared ────────────────────────────────────────────────────────
 echo ""

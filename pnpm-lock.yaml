@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@tightknitai/block-kitchen':
-        specifier: 0.8.3
-        version: 0.8.3(6ec9554d2445dfbb40a5f352acfc8ded)
+        specifier: 0.8.4
+        version: 0.8.4(6ec9554d2445dfbb40a5f352acfc8ded)
       '@tightknitai/slack-block-kit-validator':
         specifier: 0.1.7
         version: 0.1.7
@@ -954,8 +954,8 @@ packages:
   '@speed-highlight/core@1.2.15':
     resolution: {integrity: sha512-BMq1K3DsElxDWawkX6eLg9+CKJrTVGCBAWVuHXVUV2u0s2711qiChLSId6ikYPfxhdYocLNt3wWwSvDiTvFabw==}
 
-  '@tightknitai/block-kitchen@0.8.3':
-    resolution: {integrity: sha512-JPMrMO2GetHkDWAsI+rykcWdzMYD5Yy26OyDyzEcpiy5f9Ob1pVR/ALaUza67a6qK93Pl//TlODdOxcpifymZA==}
+  '@tightknitai/block-kitchen@0.8.4':
+    resolution: {integrity: sha512-dnNtO39Fqr9m0qZRd9PNDu3fU3S4oW8WtEjIkXW/C9LMyWCVJm3z1Ag16GDT/QljF9CGmc/r6m1XUxS5nUV3qQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       '@radix-ui/react-dialog': ^1.1.0
@@ -1263,6 +1263,9 @@ packages:
 
   devlop@1.1.0:
     resolution: {integrity: sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA==}
+
+  emoji-datasource@16.0.0:
+    resolution: {integrity: sha512-/qHKqK5Nr3+8zhgO6kHmF43Fm5C8HNn0AaFRIpgw8HF3+uF0Vfc8jgLI1ZQS5ba1vBzksS8NBCjHejwLb2D/Sg==}
 
   emojilib@2.4.0:
     resolution: {integrity: sha512-5U0rVMU5Y2n2+ykNLQqMoqklN9ICBT/KsvC1Gz6vqHbz2AXXGkG+Pm5rMWk/8Vjrr/mY9985Hi8DYzn1F09Nyw==}
@@ -2638,7 +2641,7 @@ snapshots:
 
   '@speed-highlight/core@1.2.15': {}
 
-  '@tightknitai/block-kitchen@0.8.3(6ec9554d2445dfbb40a5f352acfc8ded)':
+  '@tightknitai/block-kitchen@0.8.4(6ec9554d2445dfbb40a5f352acfc8ded)':
     dependencies:
       '@dnd-kit/core': 6.3.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@dnd-kit/sortable': 10.0.0(@dnd-kit/core@6.3.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)
@@ -2655,6 +2658,7 @@ snapshots:
       '@tiptap/starter-kit': 3.23.6
       class-variance-authority: 0.7.1
       clsx: 2.1.1
+      emoji-datasource: 16.0.0
       lucide-react: 1.16.0(react@19.2.6)
       nanoid: 5.1.11
       react: 19.2.6
@@ -2956,6 +2960,8 @@ snapshots:
   devlop@1.1.0:
     dependencies:
       dequal: 2.0.3
+
+  emoji-datasource@16.0.0: {}
 
   emojilib@2.4.0: {}
 

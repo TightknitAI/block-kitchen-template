@@ -7,8 +7,9 @@ A Vite + React SPA on Cloudflare Workers that uses [block-kitchen](https://githu
 - **A visual builder UI** at `/` — drag blocks, edit them in popovers, preview them in real time.
 - **Bot OAuth** at `/slack/install` → `/slack/oauth_redirect` for installing the app into a workspace (bot token stored in KV).
 - **User-token OAuth** at `/slack/user-install` → `/slack/user-oauth-redirect` for "send as me" support (user token stored in a separate KV).
-- **Three Worker API routes** the SPA talks to:
+- **Four Worker API routes** the SPA talks to:
   - `GET /api/slack/channels`
+  - `GET /api/slack/emojis` (workspace custom emoji via `emoji.list`, normalized to `{ name, url, alias }[]`)
   - `GET /api/slack/me/can-send-as-user`
   - `POST /api/slack/messages/send` (validates blocks, picks bot vs user token, calls `chat.postMessage`)
 - **A `/slack/events` ingress** wired through `slack-hono` — empty by default, ready for you to add slash commands, events, and actions.
@@ -93,6 +94,22 @@ Drag a header + section block into the canvas, click **Send**, pick a channel, h
 The builder's send dialog has a **Send as me** toggle. The first time you flip it on, the SPA detects you don't have a user token yet and shows a *Sign in with Slack* link — that takes you through a second OAuth round-trip (`/slack/user-install`) that issues a user token with `chat:write,im:write` scopes. After that round-trip, future sends with the toggle on are posted as you instead of the bot.
 
 User tokens live in their own KV (`SLACK_USER_INSTALLATIONS`) keyed by `team_id:user_id`. Revoking happens by deleting the row.
+
+## Workspace custom emoji
+
+The builder's emoji picker and live preview resolve your workspace's custom emoji. On mount the SPA calls `GET /api/slack/emojis`, which proxies Slack's [`emoji.list`](https://api.slack.com/methods/emoji.list) (using the bot token) and normalizes the response into the shape block-kitchen's `customEmojis` prop expects:
+
+```ts
+type CustomEmoji = {
+  name: string;         // codename between colons — `:partyparrot:` → "partyparrot"
+  url: string | null;   // hosted image for a real custom emoji, null for an alias
+  alias: string | null; // target codename when this entry aliases another, else null
+};
+```
+
+Slack returns a `{ name: value }` map where `value` is either an image URL or `alias:<target>`; the worker splits that into the `url` / `alias` fields. The SPA hands the resulting array straight to `<BlockKitchen customEmojis={…} />` (see `src/client/App.tsx`) — a plain prop, resolved up front, rather than a lazy loader like `loadChannels` / `loadSendAsUserStatus` / `onSend`. With it set, the picker gains a **Custom** category and the preview renders `:custom:` directives as the workspace image (aliases fall back to their target).
+
+The prop is optional and preview/picker-only — custom-emoji fields are never serialized into the emitted Block Kit JSON, and the builder works unchanged when the array is empty (e.g. before the app is installed). Sourcing emoji live from `emoji.list` needs the bot **`emoji:read`** scope, already declared in `manifest.json` and requested via `SLACK_BOT_SCOPES` in `wrangler.jsonc`. If you installed the app before this change, re-push the manifest and rerun `pnpm run install-app` so the new scope is granted.
 
 ## Production setup
 
