@@ -19,7 +19,8 @@
         "chat:write",
         "channels:read",
         "groups:read",
-        "im:write"
+        "im:write",
+        "emoji:read"
       ],
       "user": [
         "chat:write",

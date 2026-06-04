@@ -278,6 +278,40 @@ app.get("/api/slack/channels", async (c) => {
   return c.json(channels);
 });
 
+// Workspace custom emoji, sourced live from Slack `emoji.list`. The template
+// has no DB, so the live API is the natural source (vs. a synced table).
+// Normalized to the `{ name, url, alias }[]` shape the builder's `customEmojis`
+// prop expects — mirrors @tightknitai/block-kitchen's `CustomEmoji`, kept local
+// so the worker stays decoupled from the client package:
+//   - true custom emoji → { name, url: <image>, alias: null }
+//   - alias of another  → { name, url: null,    alias: <target codename> }
+// Requires the bot `emoji:read` scope.
+interface CustomEmoji {
+  name: string;
+  url: string | null;
+  alias: string | null;
+}
+const EMOJI_ALIAS_PREFIX = "alias:";
+
+app.get("/api/slack/emojis", async (c) => {
+  const install = await requireBotInstall(c);
+  if (install instanceof Response) return install;
+
+  const client = new SlackAPIClient(install.bot_token);
+  try {
+    const res = await client.emoji.list();
+    const emojis: CustomEmoji[] = Object.entries(res.emoji ?? {}).map(([name, value]) =>
+      value.startsWith(EMOJI_ALIAS_PREFIX)
+        ? { name, url: null, alias: value.slice(EMOJI_ALIAS_PREFIX.length) }
+        : { name, url: value, alias: null },
+    );
+    emojis.sort((a, b) => a.name.localeCompare(b.name));
+    return c.json(emojis);
+  } catch (err) {
+    return c.json({ ok: false, error: err instanceof Error ? err.message : String(err) }, 502);
+  }
+});
+
 app.get("/api/slack/me/can-send-as-user", async (c) => {
   const teamId = getCookie(c, TEAM_COOKIE);
   const userId = getCookie(c, USER_COOKIE);

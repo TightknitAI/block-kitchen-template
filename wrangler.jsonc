@@ -32,9 +32,10 @@
     "not_found_handling": "single-page-application"
   },
 
-  // Non-secret env vars. Bot scopes for chat + channels; user scopes for "send as user".
+  // Non-secret env vars. Bot scopes for chat + channels + custom emoji
+  // (emoji:read powers /api/slack/emojis); user scopes for "send as user".
   "vars": {
-    "SLACK_BOT_SCOPES": "chat:write,channels:read,groups:read",
+    "SLACK_BOT_SCOPES": "chat:write,channels:read,groups:read,emoji:read",
     "SLACK_USER_SCOPES": "chat:write,im:write"
   }
 
