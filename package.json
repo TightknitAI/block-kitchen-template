@@ -20,23 +20,23 @@
     "install-app": "bash scripts/install-app.sh"
   },
   "dependencies": {
-    "@tightknitai/block-kitchen": "0.8.6",
-    "@tightknitai/slack-block-kit-validator": "0.1.8",
-    "hono": "^4.12.26",
+    "@tightknitai/block-kitchen": "0.9.8",
+    "@tightknitai/slack-block-kit-validator": "0.1.10",
+    "hono": "^4.12.27",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "@tightknitai/slack-hono": "^0.1.1",
-    "slack-web-api-client": "^1.1.13"
+    "slack-web-api-client": "^1.1.14"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.42.0",
-    "@cloudflare/workers-types": "^4.20260617.1",
+    "@cloudflare/vite-plugin": "^1.43.0",
+    "@cloudflare/workers-types": "^4.20260702.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.2",
+    "@vitejs/plugin-react": "^6.0.3",
     "typescript": "^6.0.3",
-    "vite": "^8.0.16",
-    "wrangler": "^4.102.0"
+    "vite": "^8.1.3",
+    "wrangler": "^4.107.0"
   },
   "packageManager": "pnpm@10.32.1"
 }
