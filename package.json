@@ -22,7 +22,7 @@
   "dependencies": {
     "@tightknitai/block-kitchen": "0.10.1",
     "@tightknitai/slack-block-kit-validator": "0.1.11",
-    "hono": "^4.12.32",
+    "hono": "^4.12.34",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "@tightknitai/slack-hono": "^0.1.1",
