@@ -2,6 +2,7 @@
   "name": "block-kitchen-template",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Template app — Slack Block Kitchen UI on Cloudflare Workers, sending messages via @tightknitai/slack-hono.",
   "type": "module",
   "scripts": {
