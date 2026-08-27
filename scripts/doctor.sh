@@ -27,7 +27,7 @@ echo ""
 
 # ── wrangler.jsonc KV ids ─────────────────────────────────────────────
 echo "wrangler.jsonc"
-for binding in SLACK_INSTALLATIONS SLACK_USER_INSTALLATIONS SLACK_OAUTH_STATE SLACK_MODAL_VIEWS; do
+for binding in SLACK_INSTALLATIONS SLACK_USER_INSTALLATIONS SLACK_OAUTH_STATE SLACK_MODAL_VIEWS SLACK_SESSIONS; do
   placeholder="REPLACE_WITH_$(echo "$binding" | sed 's/^SLACK_//')_KV_ID"
   if grep -q "$placeholder" wrangler.jsonc 2>/dev/null; then
     check "KV $binding" "no" "run \`pnpm run setup:kv\` and paste the id into wrangler.jsonc"
