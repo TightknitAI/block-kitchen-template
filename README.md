@@ -40,13 +40,14 @@ pnpm install
 pnpm run setup:kv
 ```
 
-Four namespaces are created:
+Five namespaces are created:
 - `SLACK_INSTALLATIONS` — bot tokens, keyed by team ID
 - `SLACK_USER_INSTALLATIONS` — user tokens, keyed by `team_id:user_id`
 - `SLACK_OAUTH_STATE` — short-lived OAuth state tokens
 - `SLACK_MODAL_VIEWS` — composed modal view payloads (7-day TTL), keyed by short ID
+- `SLACK_SESSIONS` — server-side sessions that bind a browser to a workspace and user, keyed by an opaque session ID
 
-Paste the IDs from the output into `wrangler.jsonc` (four placeholders).
+Paste the IDs from the output into `wrangler.jsonc` (five placeholders).
 
 ### 3. Start the dev server with a tunnel
 

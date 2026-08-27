@@ -10,7 +10,7 @@ import {
   type StoredBotInstallation,
   type StoredUserInstallation,
 } from "./oauth";
-import { getCookie, setCookie } from "./cookies";
+import { createSession, getSession, type Session } from "./session";
 
 type Bindings = {
   ASSETS: Fetcher;
@@ -18,6 +18,7 @@ type Bindings = {
   SLACK_USER_INSTALLATIONS: KVNamespace;
   SLACK_OAUTH_STATE: KVNamespace;
   SLACK_MODAL_VIEWS: KVNamespace;
+  SLACK_SESSIONS: KVNamespace;
   SLACK_SIGNING_SECRET: string;
   SLACK_CLIENT_ID: string;
   SLACK_CLIENT_SECRET: string;
@@ -39,9 +40,6 @@ const MODAL_OPEN_ACTION_ID = "bkb_open_modal";
 const MODAL_VIEW_CALLBACK_ID = "bkb_modal_v1";
 
 type AppEnv = { Bindings: Bindings };
-
-const TEAM_COOKIE = "bkb_team_id";
-const USER_COOKIE = "bkb_user_id";
 
 const app = new Hono<AppEnv>();
 
@@ -171,11 +169,11 @@ app.get("/slack/oauth_redirect", async (c) => {
   };
   await c.env.SLACK_INSTALLATIONS.put(tokenResponse.team.id, JSON.stringify(installation));
 
-  // Identify the workspace + installer for subsequent SPA calls
-  setCookie(c, TEAM_COOKIE, tokenResponse.team.id);
-  if (tokenResponse.authed_user?.id) {
-    setCookie(c, USER_COOKIE, tokenResponse.authed_user.id);
-  }
+  // Bind the workspace + installer to a server-side session for SPA calls
+  await createSession(c, c.env.SLACK_SESSIONS, {
+    team_id: tokenResponse.team.id,
+    user_id: tokenResponse.authed_user?.id ?? null,
+  });
 
   return c.redirect("/?installed=1");
 });
@@ -229,34 +227,39 @@ app.get("/slack/user-oauth-redirect", async (c) => {
   };
   await c.env.SLACK_USER_INSTALLATIONS.put(`${teamId}:${userId}`, JSON.stringify(installation));
 
-  setCookie(c, TEAM_COOKIE, teamId);
-  setCookie(c, USER_COOKIE, userId);
+  await createSession(c, c.env.SLACK_SESSIONS, { team_id: teamId, user_id: userId });
 
   return c.redirect("/?user_installed=1");
 });
 
 // ---------------------------------------------------------------------------
-// SPA-facing JSON API. Reads workspace context from the cookie set during
-// bot OAuth.
+// SPA-facing JSON API. Resolves workspace context from the server-side
+// session bound at OAuth, never from client-supplied identity.
 // ---------------------------------------------------------------------------
+
+interface AuthedRequest {
+  session: Session;
+  install: StoredBotInstallation;
+}
 
 const requireBotInstall = async (
   c: Context<AppEnv>,
-): Promise<StoredBotInstallation | Response> => {
-  const teamId = getCookie(c, TEAM_COOKIE);
-  if (!teamId) {
+): Promise<AuthedRequest | Response> => {
+  const session = await getSession(c, c.env.SLACK_SESSIONS);
+  if (!session) {
     return c.json({ ok: false, error: "Not installed yet — visit /slack/install" }, 401);
   }
-  const raw = await c.env.SLACK_INSTALLATIONS.get(teamId);
+  const raw = await c.env.SLACK_INSTALLATIONS.get(session.team_id);
   if (!raw) {
     return c.json({ ok: false, error: "Installation not found" }, 404);
   }
-  return JSON.parse(raw) as StoredBotInstallation;
+  return { session, install: JSON.parse(raw) as StoredBotInstallation };
 };
 
 app.get("/api/slack/channels", async (c) => {
-  const install = await requireBotInstall(c);
-  if (install instanceof Response) return install;
+  const authed = await requireBotInstall(c);
+  if (authed instanceof Response) return authed;
+  const { install } = authed;
 
   const client = new SlackAPIClient(install.bot_token);
   const channels: { id: string; name: string }[] = [];
@@ -294,8 +297,9 @@ interface CustomEmoji {
 const EMOJI_ALIAS_PREFIX = "alias:";
 
 app.get("/api/slack/emojis", async (c) => {
-  const install = await requireBotInstall(c);
-  if (install instanceof Response) return install;
+  const authed = await requireBotInstall(c);
+  if (authed instanceof Response) return authed;
+  const { install } = authed;
 
   const client = new SlackAPIClient(install.bot_token);
   try {
@@ -313,15 +317,14 @@ app.get("/api/slack/emojis", async (c) => {
 });
 
 app.get("/api/slack/me/can-send-as-user", async (c) => {
-  const teamId = getCookie(c, TEAM_COOKIE);
-  const userId = getCookie(c, USER_COOKIE);
   const origin = new URL(c.req.url).origin;
   const oauthUrl = `${origin}/slack/user-install`;
 
-  if (!teamId || !userId) {
+  const session = await getSession(c, c.env.SLACK_SESSIONS);
+  if (!session?.user_id) {
     return c.json({ canSendAsUser: false, oauthUrl });
   }
-  const raw = await c.env.SLACK_USER_INSTALLATIONS.get(`${teamId}:${userId}`);
+  const raw = await c.env.SLACK_USER_INSTALLATIONS.get(`${session.team_id}:${session.user_id}`);
   if (!raw) {
     return c.json({ canSendAsUser: false, oauthUrl });
   }
@@ -335,8 +338,9 @@ interface SendBody {
 }
 
 app.post("/api/slack/messages/send", async (c) => {
-  const install = await requireBotInstall(c);
-  if (install instanceof Response) return install;
+  const authed = await requireBotInstall(c);
+  if (authed instanceof Response) return authed;
+  const { install, session } = authed;
 
   const body = (await c.req.json()) as Partial<SendBody>;
   if (!body.channelId || !Array.isArray(body.blocks)) {
@@ -350,7 +354,7 @@ app.post("/api/slack/messages/send", async (c) => {
 
   let token = install.bot_token;
   if (body.sendAsUser) {
-    const userId = getCookie(c, USER_COOKIE);
+    const userId = session.user_id;
     if (!userId) {
       return c.json({ ok: false, error: "Not signed in as user" }, 401);
     }
@@ -385,10 +389,11 @@ interface SendModalBody {
 // installer a one-button nudge; clicking that button opens the modal with
 // a fresh trigger_id (handled by the bkb_open_modal action above).
 app.post("/api/slack/modals/send", async (c) => {
-  const install = await requireBotInstall(c);
-  if (install instanceof Response) return install;
+  const authed = await requireBotInstall(c);
+  if (authed instanceof Response) return authed;
+  const { install, session } = authed;
 
-  const userId = getCookie(c, USER_COOKIE);
+  const userId = session.user_id;
   if (!userId) {
     return c.json({ ok: false, error: "Not signed in — reinstall the app via /slack/install" }, 401);
   }

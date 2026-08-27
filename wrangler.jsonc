@@ -22,6 +22,10 @@
     {
       "binding": "SLACK_MODAL_VIEWS",
       "id": "REPLACE_WITH_MODAL_VIEWS_KV_ID"
+    },
+    {
+      "binding": "SLACK_SESSIONS",
+      "id": "REPLACE_WITH_SESSIONS_KV_ID"
     }
   ],
 
