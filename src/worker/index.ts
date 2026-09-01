@@ -11,6 +11,7 @@ import {
   type StoredUserInstallation,
 } from "./oauth";
 import { createSession, getSession, type Session } from "./session";
+import { clientIp, enforceRateLimit } from "./rate-limit";
 
 type Bindings = {
   ASSETS: Fetcher;
@@ -24,6 +25,10 @@ type Bindings = {
   SLACK_CLIENT_SECRET: string;
   SLACK_BOT_SCOPES: string;
   SLACK_USER_SCOPES: string;
+  // Optional so a fork that hasn't copied the `ratelimits` block from
+  // wrangler.jsonc still boots — see rate-limit.ts.
+  API_RATE_LIMITER?: RateLimit;
+  SLACK_API_RATE_LIMITER?: RateLimit;
 };
 
 // Stored modal view — what `/api/slack/modals/send` writes, what the
@@ -237,6 +242,19 @@ app.get("/slack/user-oauth-redirect", async (c) => {
 // session bound at OAuth, never from client-supplied identity.
 // ---------------------------------------------------------------------------
 
+// Per-IP throttle across the whole SPA-facing API. Registered ahead of the
+// routes so a flood is rejected before it costs a KV read, let alone a Slack
+// call.
+app.use("/api/*", async (c, next) => {
+  const throttled = await enforceRateLimit(
+    c.env.API_RATE_LIMITER,
+    "API_RATE_LIMITER",
+    clientIp(c.req.raw),
+  );
+  if (throttled) return throttled;
+  await next();
+});
+
 interface AuthedRequest {
   session: Session;
   install: StoredBotInstallation;
@@ -253,8 +271,30 @@ const requireBotInstall = async (
   if (!raw) {
     return c.json({ ok: false, error: "Installation not found" }, 404);
   }
+  // Every route behind this helper spends the workspace's Slack API quota, so
+  // charge it against a per-workspace budget too. The per-IP limit above can't
+  // do this job on its own — callers spread across many IPs still add up to
+  // one workspace's quota.
+  const throttled = await enforceRateLimit(
+    c.env.SLACK_API_RATE_LIMITER,
+    "SLACK_API_RATE_LIMITER",
+    session.team_id,
+  );
+  if (throttled) return throttled;
   return { session, install: JSON.parse(raw) as StoredBotInstallation };
 };
+
+// Bound the `conversations.list` walk. 5 pages × 200 is 1,000 channels —
+// comfortably above any real workspace, and it caps the Slack fan-out one
+// request can trigger. When Slack still has a cursor at the cap we say so in
+// the response instead of silently serving a partial picker.
+const CHANNELS_PAGE_SIZE = 200;
+const CHANNELS_MAX_PAGES = 5;
+
+interface ChannelsResponse {
+  channels: { id: string; name: string }[];
+  truncated: boolean;
+}
 
 app.get("/api/slack/channels", async (c) => {
   const authed = await requireBotInstall(c);
@@ -262,23 +302,26 @@ app.get("/api/slack/channels", async (c) => {
   const { install } = authed;
 
   const client = new SlackAPIClient(install.bot_token);
-  const channels: { id: string; name: string }[] = [];
+  const channels: ChannelsResponse["channels"] = [];
   let cursor: string | undefined;
+  let pages = 0;
   do {
     const res = await client.conversations.list({
       types: ["public_channel", "private_channel"],
       exclude_archived: true,
-      limit: 200,
+      limit: CHANNELS_PAGE_SIZE,
       cursor,
     });
     for (const ch of res.channels ?? []) {
       if (ch.id && ch.name) channels.push({ id: ch.id, name: ch.name });
     }
     cursor = res.response_metadata?.next_cursor || undefined;
-  } while (cursor);
+    pages += 1;
+  } while (cursor && pages < CHANNELS_MAX_PAGES);
 
   channels.sort((a, b) => a.name.localeCompare(b.name));
-  return c.json(channels);
+  const body: ChannelsResponse = { channels, truncated: Boolean(cursor) };
+  return c.json(body);
 });
 
 // Workspace custom emoji, sourced live from Slack `emoji.list`. The template
