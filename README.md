@@ -7,8 +7,8 @@ A Vite + React SPA on Cloudflare Workers that uses [block-kitchen](https://githu
 - **A visual builder UI** at `/` — drag blocks, edit them in popovers, preview them in real time.
 - **Bot OAuth** at `/slack/install` → `/slack/oauth_redirect` for installing the app into a workspace (bot token stored in KV).
 - **User-token OAuth** at `/slack/user-install` → `/slack/user-oauth-redirect` for "send as me" support (user token stored in a separate KV).
-- **Four Worker API routes** the SPA talks to:
-  - `GET /api/slack/channels`
+- **Four Worker API routes** the SPA talks to, all rate limited (see [Rate limiting](#rate-limiting)):
+  - `GET /api/slack/channels` → `{ channels, truncated }` (paging is capped — see [Channel loading](#channel-loading))
   - `GET /api/slack/emojis` (workspace custom emoji via `emoji.list`, normalized to `{ name, url, alias }[]`)
   - `GET /api/slack/me/can-send-as-user`
   - `POST /api/slack/messages/send` (validates blocks, picks bot vs user token, calls `chat.postMessage`)
@@ -112,6 +112,36 @@ Slack returns a `{ name: value }` map where `value` is either an image URL or `a
 
 The prop is optional and preview/picker-only — custom-emoji fields are never serialized into the emitted Block Kit JSON, and the builder works unchanged when the array is empty (e.g. before the app is installed). Sourcing emoji live from `emoji.list` needs the bot **`emoji:read`** scope, already declared in `manifest.json` and requested via `SLACK_BOT_SCOPES` in `wrangler.jsonc`. If you installed the app before this change, re-push the manifest and rerun `pnpm run install-app` so the new scope is granted.
 
+## Rate limiting
+
+Every `/api` route is throttled through Cloudflare's [Workers rate limiting](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/) binding. Two limiters, declared in the `ratelimits` block of `wrangler.jsonc`, because there are two different costs to bound:
+
+| Binding | Keyed on | Default | Bounds |
+| --- | --- | --- | --- |
+| `API_RATE_LIMITER` | client IP (`CF-Connecting-IP`) | 60 / min | How fast one caller can drive the Worker. Applied to every `/api` route, ahead of auth. |
+| `SLACK_API_RATE_LIMITER` | Slack team id | 30 / min | How fast one workspace can burn its own Slack API quota. Applied to every route that calls Slack with that workspace's token. |
+
+The per-IP limiter can't do the second job on its own — callers spread across many IPs still add up to one workspace's Slack quota — which is why the second one keys on the workspace instead.
+
+Unlike KV, these need **no setup step**: `namespace_id` is just a label you pick, unique within the Worker, so the defaults work as-is on first deploy. Tune the numbers in `wrangler.jsonc` for your own traffic; `simple.period` accepts only `10` or `60` seconds. Throttled callers get a `429` with `Retry-After` and `{ ok: false, error }`.
+
+If you're updating an existing fork and skip the `ratelimits` block, the Worker still boots and serves traffic — it just runs unthrottled and logs a warning once per isolate (see `src/worker/rate-limit.ts`).
+
+## Channel loading
+
+`GET /api/slack/channels` walks Slack's `conversations.list` cursor, but not forever: it stops after `CHANNELS_MAX_PAGES` (5) pages of 200, so a single request can never fan out into more than five Slack calls no matter how large the workspace is.
+
+The response is an envelope rather than a bare array:
+
+```jsonc
+{
+  "channels": [{ "id": "C123", "name": "general" }],
+  "truncated": false  // true when Slack still had a cursor at the page cap
+}
+```
+
+`truncated` exists so a partial list is visible rather than silent — the SPA surfaces a notice above the builder when it's set. 1,000 channels is comfortably above any real workspace; if yours is bigger, raise `CHANNELS_MAX_PAGES` in `src/worker/index.ts` (and expect the request to get slower), or switch the picker to server-side search.
+
 ## Production setup
 
 ### 1. Deploy
@@ -178,10 +208,12 @@ src/
   worker/                — Cloudflare Worker entry + OAuth helpers
     index.ts             — Hono app: /slack/install, /slack/*, /api/slack/*, asset fallback
     oauth.ts             — bot + user OAuth flow (state, code exchange)
+    session.ts           — server-side sessions (opaque cookie id → identity in KV)
+    rate-limit.ts        — per-IP and per-workspace throttles for the /api routes
     cookies.ts           — minimal cookie helpers
 scripts/                 — setup helpers (manifest, secrets, tunnel, install)
 manifest.json            — Slack app manifest
-wrangler.jsonc           — Cloudflare Workers config (KV bindings, asset binding)
+wrangler.jsonc           — Cloudflare Workers config (KV + rate limit bindings, asset binding)
 .dev.vars.example        — local secret template
 .github/workflows/
   deploy.yml             — auto-deploy on push to main

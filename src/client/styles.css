@@ -118,3 +118,19 @@ body {
   font-size: 0.8125rem;
   color: hsl(var(--muted-foreground));
 }
+
+/* Shown when the worker hit its conversations.list page cap. */
+.app__header .app__notice {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  font-size: 0.8125rem;
+}
+
+.app__notice code {
+  font-size: 0.9em;
+  color: hsl(var(--muted-foreground));
+}

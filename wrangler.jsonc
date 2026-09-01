@@ -29,6 +29,24 @@
     }
   ],
 
+  // Rate limiting for the /api routes. Unlike KV, these need no setup step —
+  // `namespace_id` is just a label you pick, unique within this Worker.
+  // Starting points; tune them for your own traffic:
+  //   API_RATE_LIMITER        — per client IP, every /api route
+  //   SLACK_API_RATE_LIMITER  — per workspace, every route that calls Slack
+  "ratelimits": [
+    {
+      "name": "API_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 60, "period": 60 }
+    },
+    {
+      "name": "SLACK_API_RATE_LIMITER",
+      "namespace_id": "1002",
+      "simple": { "limit": 30, "period": 60 }
+    }
+  ],
+
   // SPA assets — Vite builds the React client into dist/client/
   "assets": {
     "directory": "./dist/client",

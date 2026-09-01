@@ -11,16 +11,38 @@ import {
 
 type Mode = "message" | "modal";
 
-type BuilderIO = Pick<BlockKitchenProps, "loadChannels" | "loadSendAsUserStatus" | "onSend">;
+// `Required<>` because BlockKitchenProps is a union: compose-only mode declares
+// the send trio as `?: undefined`, so a bare Pick<> collapses them to optional
+// and no longer satisfies the send variant we're actually using.
+type BuilderIO = Required<
+  Pick<BlockKitchenProps, "loadChannels" | "loadSendAsUserStatus" | "onSend">
+>;
 
-const messageIO: BuilderIO = {
+/**
+ * `GET /api/slack/channels` wraps its list in an envelope: the worker caps how
+ * many `conversations.list` pages it walks, and `truncated` says whether Slack
+ * still had more beyond that cap.
+ */
+interface ChannelsResponse {
+  channels: ChannelOption[];
+  truncated: boolean;
+}
+
+/**
+ * The builder's `loadChannels` contract is `ChannelOption[]`, so truncation
+ * can't ride along in the return value — it's reported through this callback
+ * instead, and the app surfaces it next to the header.
+ */
+const createMessageIO = (onTruncated: () => void): BuilderIO => ({
   loadChannels: async (): Promise<ChannelOption[]> => {
     const res = await fetch("/api/slack/channels", { credentials: "include" });
     if (!res.ok) {
       const err = (await res.json().catch(() => ({ error: res.statusText }))) as { error?: string };
       throw new Error(err.error ?? "Failed to load channels");
     }
-    return res.json();
+    const { channels, truncated } = (await res.json()) as ChannelsResponse;
+    if (truncated) onTruncated();
+    return channels;
   },
   loadSendAsUserStatus: async (): Promise<SendAsUserStatus> => {
     const res = await fetch("/api/slack/me/can-send-as-user", { credentials: "include" });
@@ -35,7 +57,7 @@ const messageIO: BuilderIO = {
     });
     return res.json();
   },
-};
+});
 
 /**
  * Workspace custom emoji, fetched once from the worker's `emoji.list` proxy.
@@ -78,7 +100,15 @@ const modalIO: BuilderIO = {
  */
 export function App() {
   const [mode, setMode] = useState<Mode>("message");
-  const io = useMemo(() => (mode === "message" ? messageIO : modalIO), [mode]);
+
+  // Set when the worker hit its `conversations.list` page cap, so the picker
+  // isn't quietly showing a partial workspace.
+  const [channelsTruncated, setChannelsTruncated] = useState(false);
+  const io = useMemo(
+    () =>
+      mode === "message" ? createMessageIO(() => setChannelsTruncated(true)) : modalIO,
+    [mode],
+  );
 
   // Custom emoji are workspace-level, so they apply to both modes. Load once on
   // mount and pass into the builder regardless of surface.
@@ -130,6 +160,14 @@ export function App() {
             </span>
           )}
         </div>
+        {mode === "message" && channelsTruncated && (
+          <p className="app__notice" role="status">
+            This workspace has more channels than the worker loads in one request, so the
+            channel picker is showing a partial list. Raise{" "}
+            <code>CHANNELS_MAX_PAGES</code> in <code>src/worker/index.ts</code> if you need
+            all of them.
+          </p>
+        )}
       </header>
       <main className="app__main">
         <BlockKitchen key={mode} workspaceName="Slack" customEmojis={customEmojis} {...io} />
