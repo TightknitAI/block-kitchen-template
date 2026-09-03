@@ -5,8 +5,19 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    # Minor/patch bumps are grouped by dependency type so that
+    # dependabot-automerge.yml can auto-merge the devDependency group while
+    # every PR that touches runtime (production) dependencies waits for a
+    # human to read the diff. Major bumps are never grouped and never
+    # auto-merged.
     groups:
-      npm-minor-and-patch:
+      npm-dev-minor-and-patch:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      npm-prod-minor-and-patch:
+        dependency-type: production
         update-types:
           - minor
           - patch
