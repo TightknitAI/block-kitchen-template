@@ -17,16 +17,40 @@ jobs:
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Enable auto-merge for minor/patch updates
-        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+      # Only minor/patch bumps of devDependencies are auto-merged. Anything
+      # that ships to the Worker at runtime (`dependencies` in package.json,
+      # reported by Dependabot as `direct:production`) is held so a human
+      # reads the diff before it reaches `main` and the Deploy workflow.
+      # Transitive (`indirect`) and GitHub Actions bumps are held for the
+      # same reason. A PR that mixes types reports the "highest" type, so
+      # a single production dependency in a group is enough to hold it.
+      - name: Enable auto-merge for minor/patch devDependency updates
+        if: |
+          steps.metadata.outputs.update-type != 'version-update:semver-major' &&
+          steps.metadata.outputs.dependency-type == 'direct:development'
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Approve PR
-        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        if: |
+          steps.metadata.outputs.update-type != 'version-update:semver-major' &&
+          steps.metadata.outputs.dependency-type == 'direct:development'
         run: gh pr review --approve "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment when held for manual review
+        if: |
+          github.event.action == 'opened' &&
+          steps.metadata.outputs.update-type != 'version-update:semver-major' &&
+          steps.metadata.outputs.dependency-type != 'direct:development'
+        run: |
+          gh pr comment "$PR_URL" --body "Held for manual review: this PR updates \`$DEPENDENCY_TYPE\` dependencies (\`$DEPENDENCY_NAMES\`). Only minor/patch devDependency bumps are auto-merged. Verify the changelog and source diff before merging."
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          DEPENDENCY_NAMES: ${{ steps.metadata.outputs.dependency-names }}
+          DEPENDENCY_TYPE: ${{ steps.metadata.outputs.dependency-type }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
