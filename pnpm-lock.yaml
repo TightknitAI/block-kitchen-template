@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  undici@>=7.0.0 <7.29.1: '>=7.29.1 <8.0.0'
+
 importers:
 
   .:
@@ -12,8 +15,8 @@ importers:
         specifier: 0.10.11
         version: 0.10.11(4bee9c22d25e274cd782fcc198e510a3)
       '@tightknitai/slack-block-kit-validator':
-        specifier: 0.1.13
-        version: 0.1.13
+        specifier: 0.1.20
+        version: 0.1.20
       '@tightknitai/slack-hono':
         specifier: ^0.1.2
         version: 0.1.2(hono@4.13.4)
@@ -967,8 +970,8 @@ packages:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
 
-  '@tightknitai/slack-block-kit-validator@0.1.13':
-    resolution: {integrity: sha512-Zxe+cgKnWSettBS5PCxGcNUR7GufZZlig9XXzf7FSxt6sYBc56eriEWE9Oub4MckSuCQTl8ds0NFsiMERTYkrg==}
+  '@tightknitai/slack-block-kit-validator@0.1.20':
+    resolution: {integrity: sha512-8xASPAIvSpPMEpkna4+1Rg60nzNs8QbxiKtkbpM23AvBlR2pcHbf/BhMfuatxPhaul77GPO9Ch7CllJpsQjBsQ==}
     engines: {node: '>=20'}
 
   '@tightknitai/slack-hono@0.1.2':
@@ -1916,8 +1919,8 @@ packages:
     engines: {node: '>=16.20.0'}
     hasBin: true
 
-  undici@7.29.0:
-    resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
+  undici@7.30.1:
+    resolution: {integrity: sha512-03KrMbjIFDWQR5RNPrSw3bd1r12JpyFQl9/yxjUbJtqkjmllqC5lFjZh6ujeuJCKr8EOQvRW872Oy/az+nLYxg==}
     engines: {node: '>=20.18.1'}
 
   unenv@2.0.0-rc.24:
@@ -2742,7 +2745,7 @@ snapshots:
       '@radix-ui/react-radio-group': 1.3.8(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@radix-ui/react-slot': 1.2.4(@types/react@19.2.18)(react@19.2.8)
       '@radix-ui/react-tooltip': 1.2.8(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@tightknitai/slack-block-kit-validator': 0.1.13
+      '@tightknitai/slack-block-kit-validator': 0.1.20
       '@tiptap/extension-link': 3.30.3(@tiptap/core@3.30.3(@tiptap/pm@3.30.3))(@tiptap/pm@3.30.3)
       '@tiptap/react': 3.30.3(@floating-ui/dom@1.8.0)(@tiptap/core@3.30.3(@tiptap/pm@3.30.3))(@tiptap/pm@3.30.3)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tiptap/starter-kit': 3.30.3
@@ -2763,7 +2766,7 @@ snapshots:
       - '@types/react-dom'
       - supports-color
 
-  '@tightknitai/slack-block-kit-validator@0.1.13':
+  '@tightknitai/slack-block-kit-validator@0.1.20':
     dependencies:
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
@@ -3618,7 +3621,7 @@ snapshots:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       sharp: 0.35.2
-      undici: 7.29.0
+      undici: 7.30.1
       workerd: 1.20260820.1
       ws: 8.21.0
       youch: 4.1.0-beta.10
@@ -3964,7 +3967,7 @@ snapshots:
       '@typescript/typescript-win32-arm64': 7.0.2
       '@typescript/typescript-win32-x64': 7.0.2
 
-  undici@7.29.0: {}
+  undici@7.30.1: {}
 
   unenv@2.0.0-rc.24:
     dependencies:
