@@ -4,6 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     # Minor/patch bumps are grouped by dependency type so that
     # dependabot-automerge.yml can auto-merge the devDependency group while
@@ -26,6 +28,8 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       actions-minor-and-patch:
         update-types:
